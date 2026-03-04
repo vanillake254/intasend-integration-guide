@@ -298,6 +298,144 @@ export async function stkPush({ amount, email, phone_number, name, api_ref, redi
 }
 ```
 
+### C) “Real project” example (same structure used in Vanilla Recovery Hub)
+
+If you want a complete, copy/paste pattern that looks like a production backend, use this:
+
+- Frontend calls: `POST /api/payments/initiate-direct`
+- Backend returns: `{ paymentUrl, checkoutId, tx_ref }`
+- Frontend redirects user to `paymentUrl`
+- IntaSend calls: `POST /api/payments/webhook`
+- Your server updates DB on `state === "COMPLETE"`
+- Success page can call: `GET /api/payments/verify/:tx_ref`
+
+#### 1) Route definitions (Express)
+
+```js
+import express from "express";
+import crypto from "crypto";
+import { createHostedCheckout, verifyByApiRef } from "./intasendService.js";
+
+const router = express.Router();
+
+function makeTxRef() {
+  return `VRH-${Date.now()}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+}
+
+// POST /api/payments/initiate-direct
+router.post("/api/payments/initiate-direct", async (req, res) => {
+  const { name, email, phone, amount } = req.body;
+  const tx_ref = makeTxRef();
+
+  // 1) Save a PENDING payment in your DB *before* calling IntaSend
+  // await db.payments.insert({ tx_ref, amount, status: "PENDING", customer: { name, email, phone } })
+
+  const checkout = await createHostedCheckout({
+    amount: Number(amount),
+    email,
+    phone_number: phone,
+    name,
+    api_ref: tx_ref,
+    redirect_url: `${process.env.SUCCESS_URL}?tx_ref=${encodeURIComponent(tx_ref)}`,
+  });
+
+  return res.json({
+    success: true,
+    data: {
+      mode: "redirect",
+      paymentUrl: checkout.url,
+      checkoutId: checkout.id,
+      tx_ref,
+      amount: Number(amount),
+      currency: "KES",
+    },
+  });
+});
+
+// Webhook auth using IntaSend "challenge" field (simple shared secret)
+function verifyWebhookChallenge(req, res, next) {
+  const configured = process.env.INTASEND_WEBHOOK_SECRET || "";
+  if (!configured) return next();
+
+  const received = req.body?.challenge;
+  if (!received) return res.status(401).json({ error: "Missing challenge" });
+  if (received !== configured) return res.status(401).json({ error: "Challenge mismatch" });
+
+  return next();
+}
+
+// POST /api/payments/webhook
+router.post("/api/payments/webhook", verifyWebhookChallenge, async (req, res) => {
+  const payload = req.body;
+  const { state, api_ref, invoice_id, value } = payload;
+
+  // IntaSend sends our reference back in api_ref
+  const tx_ref = api_ref;
+
+  if (state === "COMPLETE") {
+    // 1) Find payment in DB by tx_ref
+    // 2) Mark payment SUCCESSFUL/PAID
+    // 3) Grant access (create order, activate subscription, unlock premium, send email, etc.)
+    // await db.payments.update({ tx_ref }, { status: "PAID", provider_id: invoice_id, provider_payload: payload })
+    return res.json({ ok: true });
+  }
+
+  if (state === "FAILED") {
+    // await db.payments.update({ tx_ref }, { status: "FAILED", provider_payload: payload })
+    return res.json({ ok: true });
+  }
+
+  return res.json({ ok: true });
+});
+
+// GET /api/payments/verify/:tx_ref
+router.get("/api/payments/verify/:tx_ref", async (req, res) => {
+  const tx_ref = req.params.tx_ref;
+
+  // If your DB still says pending, verify from IntaSend using api_ref
+  const verification = await verifyByApiRef(tx_ref);
+  return res.json({ success: true, data: verification });
+});
+
+export default router;
+```
+
+#### 2) Add verifyByApiRef to your `intasendService.js`
+
+This is the exact approach used in the other repo: verify by `api_ref` using `/payment/status/`.
+
+```js
+import axios from "axios";
+
+const INTASEND_BASE_URL = "https://payment.intasend.com/api/v1";
+
+function getIntaSendHeaders() {
+  const secret = (process.env.INTASEND_SECRET_KEY || "").trim();
+  const pub = (process.env.INTASEND_PUBLISHABLE_KEY || "").trim();
+  if (!secret || !pub) throw new Error("IntaSend keys not configured");
+  return { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
+}
+
+export async function verifyByApiRef(apiRef) {
+  const r = await axios.get(`${INTASEND_BASE_URL}/payment/status/`, {
+    params: { api_ref: apiRef },
+    headers: getIntaSendHeaders(),
+  });
+
+  const results = r.data?.results || [];
+  const payment = results.find((p) => p.api_ref === apiRef);
+  if (!payment) return { success: false, error: "Payment not found" };
+
+  return {
+    success: payment.state === "COMPLETE",
+    status: payment.state,
+    amount: payment.value,
+    currency: payment.currency,
+    reference: payment.api_ref,
+  };
+}
+```
+
 ### C) Optional verify endpoint (useful for your “success” page)
 
 Redirect is not proof. Webhook is the truth.
