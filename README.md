@@ -1,5 +1,26 @@
 # IntaSend Hosted Checkout + Webhook (Integration Guide)
 
+## COPYRIGHT / OWNERSHIP NOTICE (READ FIRST)
+
+All files in this repository (including but not limited to: documentation, code samples, examples, templates, and project structure) were prepared by and belong to **Vanilla Softwares**.
+
+Unauthorized copying, redistribution, resale, relicensing, or publishing of any part of this repository (in source or compiled form) is prohibited without written permission from Vanilla Softwares.
+
+You may use these materials only with explicit permission from Vanilla Softwares.
+
+If permission is granted, you must:
+
+- Keep this copyright notice intact.
+- Not remove Vanilla Softwares attribution.
+- Not claim the work as your own.
+- Not use it to create competing “integration guide” products.
+
+Contact:
+
+- Phone/WhatsApp: `+254792619069`
+
+By continuing to read/use this repository, you acknowledge this notice.
+
 This repo is a practical, copy/paste-friendly guide for integrating **IntaSend hosted checkout** into your website/app.
 
 It covers:

@@ -1,4 +1,13 @@
-import { safeJsonParse, verifyIntaSendWebhookSignature } from "../_lib/intasend";
+/*
+ Copyright (c) Vanilla Softwares.
+
+ All rights reserved. This file is proprietary to Vanilla Softwares and may not be copied,
+ redistributed, or used without written permission.
+
+ Contact: +254792619069
+*/
+
+import { safeJsonParse, verifyIntaSendWebhookSignature } from "../_lib/intasend.js";
 
 // Webhook signature verification uses crypto/Buffer, so we force Node.js runtime.
 export const runtime = "nodejs";

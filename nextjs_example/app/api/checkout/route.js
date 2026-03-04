@@ -1,9 +1,18 @@
+/*
+ Copyright (c) Vanilla Softwares.
+
+ All rights reserved. This file is proprietary to Vanilla Softwares and may not be copied,
+ redistributed, or used without written permission.
+
+ Contact: +254792619069
+*/
+
 import {
   compactPayload,
   getIntaSendAuthHeaders,
   getIntaSendBaseUrl,
   normalizePhoneToNumber,
-} from "../_lib/intasend";
+} from "../_lib/intasend.js";
 
 // Ensure this route runs on Node.js runtime (so server APIs like Buffer are available consistently).
 export const runtime = "nodejs";

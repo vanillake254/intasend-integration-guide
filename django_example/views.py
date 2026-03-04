@@ -1,3 +1,11 @@
+"""Copyright (c) Vanilla Softwares.
+
+All rights reserved. This file is proprietary to Vanilla Softwares and may not be copied,
+redistributed, or used without written permission.
+
+Contact: +254792619069
+"""
+
 import json
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt

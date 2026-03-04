@@ -1,5 +1,11 @@
 # Quickstart (Run the Examples)
 
+**Copyright (c) Vanilla Softwares.**
+
+All rights reserved. Proprietary materials prepared by Vanilla Softwares. No copying, redistribution, or reuse without written permission.
+
+Contact: `+254792619069`
+
 Pick the stack you’re using. You don’t need to run every folder.
 
 This repo is meant to be **copied into your real project**:

@@ -1,3 +1,11 @@
+"""Copyright (c) Vanilla Softwares.
+
+All rights reserved. This file is proprietary to Vanilla Softwares and may not be copied,
+redistributed, or used without written permission.
+
+Contact: +254792619069
+"""
+
 import os
 import hmac
 import hashlib
